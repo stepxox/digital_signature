@@ -1,0 +1,5 @@
+Jana Kantorova je jedna z prednich ceskych kryptograficek.
+Za svuj nejvetsi uspech povazuje desifrovani zpravy z roku 1918, ktera byla zasifrovana
+metodou Hill-Cipher. V roce 2018 ziskala cenu za nejlepsi ceske kryptograficke prace
+za svou praci o kryptografickych technikach v oblasti elektronickeho obchodu. Jeji manzel
+Stepan Kantor je liny blbecek. (zdroj: Wikipedia)
