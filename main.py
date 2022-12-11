@@ -8,7 +8,7 @@ from base64 import b64decode, b64encode
 import rsa
 import sha
 
-# encoding z ascii na utf-8
+# encoding do ascii, pote decoding do utf-8
 def ghstrc(t):
     return str(b64encode(t.encode("ascii")).decode("utf-8"))
 
