@@ -24,15 +24,15 @@ class MyApp(QMainWindow, Ui_MainWindow):
     def saveKeys(self):
         privateKey, publicKey = rsa.getKeys()
         options = QFileDialog.Options()
-        path, _ = QFileDialog.getSaveFileName(self,"Vyber privatni klic", "","Privatni klic (*.priv);;All Files (*)", options=options)
+        path, _ = QFileDialog.getSaveFileName(self,"Uloz privatni klic", "privKey","Privatni klic (*.priv);;All Files (*)", options=options)
         
         priv = open(path, "w")
         priv.write("RSA ")
         priv.write(self.ghstrc("".join([str(privateKey[0]), "@", str(privateKey[1])])))
         priv.close()
     
-        path2, _ = QFileDialog.getSaveFileName(self,"Vyber verejny klic", "","Verejny klic (*.pub);;All Files (*)", options=options)
-        pub = open(path2, "w")
+        pubKey, _ = QFileDialog.getSaveFileName(self,"Uloz verejny klic", "pubKey","Verejny klic (*.pub);;All Files (*)", options=options)
+        pub = open(pubKey, "w")
         pub.write("RSA ")
         pub.write(self.ghstrc("".join([str(publicKey[0]), "@", str(publicKey[1])])))
         pub.close()
@@ -54,7 +54,7 @@ class MyApp(QMainWindow, Ui_MainWindow):
         # content = file.read()
         file.close()
         
-    # ulozeni podpisu .sign file 
+    # nacteni originalniho souboru a vytvoreni podpisu .sign file
     def sign(self):
         options = QFileDialog.Options()
         path, _ = QFileDialog.getOpenFileName(self,"Vyber originalni soubor", "","Textovy soubor (*.txt);;All Files (*)", options=options)
@@ -64,23 +64,27 @@ class MyApp(QMainWindow, Ui_MainWindow):
         file.close()
         a = hashlib.sha3_512()
         a = a.hexdigest()
-        path2, _ = QFileDialog.getOpenFileName(self,"Vyber privatni klic", "","Privatni klic (*.priv);;All Files (*)", options=options)
-        m = open(path, "rb")
+        pathPriv, _ = QFileDialog.getOpenFileName(self,"Vyber privatni klic", "","Privatni klic (*.priv);;All Files (*)", options=options)
+        m = open(pathPriv, "r")
         privKey = m.read()
         m.close()
-        privKey = b64decode(privKey.replace(
-            "RSA ", "")).decode("utf-8")
+        privKey = b64decode(privKey.replace("RSA ", "")).decode("utf-8")
         d, n = privKey.split("@")
-        encrypted = rsa.encrypt((int(d), int(n)), a)
-        path3, _ = QFileDialog.getSaveFileName(self,"Uloz podepsany soubor", "","Podepsany soubor (*.sign);;All Files (*)", options=options)
+        encrypted = str(rsa.encrypt((int(d), int(n)), a))
+        pathSigned, _ = QFileDialog.getSaveFileName(self,"Uloz podepsany soubor", "","Podepsany soubor (*.sign);;All Files (*)", options=options)
         #signatureList = rsa.encrypt(privKey, a)
         #jsonSignature = json.dumps(signatureList)
         #signature = self.ghstrc(jsonSignature)
         #self.saveSignature(signatureFileName, signature)
-        sign = open(path3, "w")
+        sign = open(pathSigned, "w")
         sign.write("RSA_SHA3-512 ")
         sign.write(encrypted)
         sign.close()
+
+        zipObject = zipfile.ZipFile("signed.zip", "w")
+        zipObject.write(path,os.path.basename(path))
+        zipObject.write(pathSigned,os.path.basename(pathSigned))
+        zipObject.close()
         self.output.SetText("Soubor byl uspesne podepsan")
         
     # overeni podpisu
@@ -92,7 +96,7 @@ class MyApp(QMainWindow, Ui_MainWindow):
         file.close()
         a = hashlib.sha3_512()
         a = a.hexdigest()
-        path2, _ = QFileDialog.getOpenFileName(self,"Vyber originalni soubor", "","Textovy soubor (*.txt);;All Files (*)", options=options)
+        pathPriv, _ = QFileDialog.getOpenFileName(self,"Vyber privatni klic", "","Textovy soubor (*.priv);;All Files (*)", options=options)
         path3, _ = QFileDialog.getOpenFileName(self,"Vyber originalni soubor", "","Textovy soubor (*.txt);;All Files (*)", options=options)
         signature = b64decode(signature.replace(
             "RSA_SHA3-512 ", "")).decode("utf-8")
@@ -162,7 +166,9 @@ class MyApp(QMainWindow, Ui_MainWindow):
          Ui_MainWindow.__init__(self)
          self.setupUi(self)
          self.generate.clicked.connect(self.saveKeys)
-         self.nacist.clicked.connect(self.sign)
+         self.load.clicked.connect(self.sign)
+         self.verify.clicked.connect(self.verifySignature)
+         
 
 
 if __name__ == "__main__":
